@@ -1,15 +1,8 @@
-//
-//  TaskEditView.swift
-//  ToDoList
-//
-//  Created by Райымбек Омаров on 30.05.2025.
-//
 import SwiftUI
 
 struct TaskEditView: View {
     var task: TaskEntity
     var onSave: (String, String, Bool) -> Void
-    @Environment(\.presentationMode) var presentationMode
 
     @State private var title: String
     @State private var description: String
@@ -24,23 +17,25 @@ struct TaskEditView: View {
     }
 
     var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Title")) {
-                    TextField("Title", text: $title)
-                }
-                Section(header: Text("Description")) {
-                    TextField("Description", text: $description)
-                }
-                Section {
-                    Toggle("Completed", isOn: $isCompleted)
+        Form {
+            Section(header: Text("Title")) {
+                TextField("Title", text: $title)
+            }
+            Section(header: Text("Description")) {
+                TextField("Description", text: $description)
+            }
+            Section {
+                Toggle("Completed", isOn: $isCompleted)
+            }
+        }
+        .navigationTitle("Edit Task")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    onSave(title, description, isCompleted)
                 }
             }
-            .navigationTitle("Edit Task")
-            .navigationBarItems(trailing: Button("Save") {
-                onSave(title, description, isCompleted)
-                presentationMode.wrappedValue.dismiss()
-            })
         }
     }
 }
