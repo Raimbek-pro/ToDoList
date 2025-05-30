@@ -14,4 +14,5 @@ struct TaskEntity: Identifiable {
     var description: String
     var creationDate: Date
     var isCompleted: Bool
+    let isLocal: Bool
 }

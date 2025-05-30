@@ -15,8 +15,10 @@ struct ToDoListApp: App {
         WindowGroup {
             NavigationView {
                 TaskListRouter.build()
+                    
             }
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .preferredColorScheme(.dark)
         }
     }
 }

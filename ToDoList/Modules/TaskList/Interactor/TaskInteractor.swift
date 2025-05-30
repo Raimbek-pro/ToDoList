@@ -6,13 +6,40 @@
 //
 
 import Foundation
-
+import CoreData
 protocol TaskListInteractorProtocol {
-    func fetchTasks(completion:@escaping ([TaskEntity])-> Void)
+    func fetchCoreDataTasks(completion:@escaping ([TaskEntity])-> Void)
+    func fetchNetworkTasks(completion:@escaping ([TaskEntity])-> Void)
+    func addTask(title: String, taskDescription: String, completion: @escaping () -> Void)
+    func updateTask(id: Int64, newTitle: String, newDescription: String, newIsCompleted: Bool, completion: @escaping () -> Void)
+    func deleteTask(id: Int64, completion: @escaping () -> Void)
+    
 }
 
 class TaskListInteractor: TaskListInteractorProtocol {
-    func fetchTasks(completion : @escaping([TaskEntity])-> Void) {
+    func fetchCoreDataTasks(completion: @escaping ([TaskEntity]) -> Void) {
+        let context = PersistenceController.shared.container.viewContext
+        let fetchRequest = NSFetchRequest<Item>(entityName: "Item")
+
+        do {
+            let items = try context.fetch(fetchRequest)
+            let tasks = items.map {
+                TaskEntity(
+                    id: $0.id,
+                    title: $0.title ?? "",
+                    description: $0.taskDescription ?? "",
+                    creationDate: $0.creationDate ?? Date(),
+                    isCompleted: $0.isCompleted,
+                    isLocal: true
+                )
+            }
+            completion(tasks)
+        } catch {
+            print("Error fetching tasks: \(error)")
+            completion([])
+        }
+    }
+    func fetchNetworkTasks(completion : @escaping([TaskEntity])-> Void) {
         DispatchQueue.global().async (execute:{
             guard let url = URL(string:"https://dummyjson.com/todos") else {
                 DispatchQueue.main.async{
@@ -36,7 +63,8 @@ class TaskListInteractor: TaskListInteractorProtocol {
                         title: $0.todo,
                         description: "User ID: \($0.userId)",
                         creationDate: Date(),
-                        isCompleted: $0.completed
+                        isCompleted: $0.completed,
+                        isLocal: false
                     )
                 }
                 
@@ -49,6 +77,81 @@ class TaskListInteractor: TaskListInteractorProtocol {
        
 
     }
+    
+    
+    func addTask(title: String, taskDescription: String, completion: @escaping () -> Void) {
+        DispatchQueue.global().async {
+            let context = PersistenceController.shared.container.viewContext
+
+            let task = Item(context: context)
+            task.id = Int64(Date().timeIntervalSince1970)
+            task.title = title
+            task.taskDescription = taskDescription
+            task.creationDate = Date()
+            task.isCompleted = false
+
+            do {
+                try context.save()
+            } catch {
+                print("Error saving task: \(error.localizedDescription)")
+            }
+
+            DispatchQueue.main.async {
+                completion()
+            }
+        }
+    }
+    
+    
+    func updateTask(id: Int64, newTitle: String, newDescription: String, newIsCompleted: Bool, completion: @escaping () -> Void) {
+          DispatchQueue.global().async {
+              let context = PersistenceController.shared.container.viewContext
+              let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
+              fetchRequest.predicate = NSPredicate(format: "id == %d", id)
+
+              do {
+                  if let task = try context.fetch(fetchRequest).first {
+                      task.title = newTitle
+                      task.taskDescription = newDescription
+                      task.isCompleted = newIsCompleted
+
+                      try context.save()
+                      DispatchQueue.main.async {
+                          completion()
+                      }
+                  }
+              } catch {
+                  print("Error updating task: \(error.localizedDescription)")
+                  DispatchQueue.main.async {
+                      completion()
+                  }
+              }
+          }
+      }
+
+     
+      func deleteTask(id: Int64, completion: @escaping () -> Void) {
+          DispatchQueue.global().async {
+              let context = PersistenceController.shared.container.viewContext
+              let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
+              fetchRequest.predicate = NSPredicate(format: "id == %d", id)
+
+              do {
+                  if let task = try context.fetch(fetchRequest).first {
+                      context.delete(task)
+                      try context.save()
+                      DispatchQueue.main.async {
+                          completion()
+                      }
+                  }
+              } catch {
+                  print("Error deleting task: \(error.localizedDescription)")
+                  DispatchQueue.main.async {
+                      completion()
+                  }
+              }
+          }
+      }
 }
 struct TodoResponse: Codable {
     let todos: [TodoItem]
