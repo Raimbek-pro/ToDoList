@@ -20,7 +20,10 @@ class TaskListPresenter: TaskListPresenterProtocol,ObservableObject {
           self.interactor = interactor
       }
     func onAppear() {
-        tasks = interactor.fetchTasks()
+        interactor.fetchTasks{ [weak self] fetchedTasks in
+            self?.tasks = fetchedTasks
+            
+        }
     }
     
     
