@@ -13,6 +13,7 @@ protocol TaskListInteractorProtocol {
     func addTask(title: String, taskDescription: String, completion: @escaping () -> Void)
     func updateTask(id: Int64, newTitle: String, newDescription: String, newIsCompleted: Bool, completion: @escaping () -> Void)
     func deleteTask(id: Int64, completion: @escaping () -> Void)
+    func saveTasksToCoreData(tasks: [TaskEntity], completion: @escaping () -> Void)
     
 }
 
@@ -152,6 +153,30 @@ class TaskListInteractor: TaskListInteractorProtocol {
               }
           }
       }
+    func saveTasksToCoreData(tasks: [TaskEntity], completion: @escaping () -> Void) {
+        DispatchQueue.global().async {
+            let context = PersistenceController.shared.container.viewContext
+            
+            for task in tasks {
+                let newItem = Item(context: context)
+                newItem.id = task.id
+                newItem.title = task.title
+                newItem.taskDescription = task.description
+                newItem.creationDate = task.creationDate
+                newItem.isCompleted = task.isCompleted
+            }
+
+            do {
+                try context.save()
+            } catch {
+                print("Failed to save tasks to CoreData: \(error.localizedDescription)")
+            }
+
+            DispatchQueue.main.async {
+                completion()
+            }
+        }
+    }
 }
 struct TodoResponse: Codable {
     let todos: [TodoItem]

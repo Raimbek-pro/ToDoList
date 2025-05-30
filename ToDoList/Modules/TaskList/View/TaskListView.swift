@@ -11,20 +11,39 @@ struct TaskListView<T: TaskListPresenterProtocol>: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(presenter.tasks) { task in
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(task.title)
-                                    .font(.title3)
-                                    .foregroundColor(.white)
-                                
-                                Text(task.description)
-                                    .font(.body)
-                                    .foregroundColor(.white)
-                                
-                                Text(formattedDate(task.creationDate))
-                                    .font(.subheadline)
-                                    .foregroundColor(.white)
+                            HStack(alignment: .top, spacing: 12) {
+                                Button(action: {
+                                    presenter.updateTask(
+                                        id: task.id,
+                                        newTitle: task.title,
+                                        newDescription: task.description,
+                                        newIsCompleted: !task.isCompleted
+                                    )
+                                }) {
+                                    Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                                        .resizable()
+                                        .frame(width: 24, height: 24)
+                                        .foregroundColor(task.isCompleted ? .green : .white)
+                                }
+
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(task.title)
+                                        .font(.title3)
+                                        .foregroundColor(.white)
+                                        .strikethrough(task.isCompleted, color: .white)
+
+                                    Text(task.description)
+                                        .font(.body)
+                                        .foregroundColor(.white)
+                                        .strikethrough(task.isCompleted, color: .white)
+
+                                    Text(formattedDate(task.creationDate))
+                                        .font(.subheadline)
+                                        .foregroundColor(.white)
+                                }
+
+                                Spacer()
                             }
-                            .multilineTextAlignment(.leading)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity, minHeight: 75, alignment: .leading)
                             .background(Color(.systemBackground))
@@ -35,20 +54,16 @@ struct TaskListView<T: TaskListPresenterProtocol>: View {
                                 alignment: .bottom
                             )
                             .contextMenu {
-                                if task.isLocal {
-                                    Button(action: {
-                                        selectedTask = task
-                                    }) {
-                                        Label("Edit", systemImage: "pencil")
-                                    }
+                                Button(action: {
+                                    selectedTask = task
+                                }) {
+                                    Label("Edit", systemImage: "pencil")
+                                }
 
-                                    Button(role: .destructive, action: {
-                                        presenter.deleteTask(id: task.id)
-                                    }) {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                } else {
-                                    Text("можно ред. и удалять только локальные задачи :)")
+                                Button(role: .destructive, action: {
+                                    presenter.deleteTask(id: task.id)
+                                }) {
+                                    Label("Delete", systemImage: "trash")
                                 }
                             }
                         }
@@ -81,7 +96,12 @@ struct TaskListView<T: TaskListPresenterProtocol>: View {
             }
             .navigationDestination(item: $selectedTask) { task in
                 TaskEditView(task: task) { updatedTitle, updatedDescription, updatedIsCompleted in
-                    presenter.updateTask(id: task.id, newTitle: updatedTitle, newDescription: updatedDescription, newIsCompleted: updatedIsCompleted)
+                    presenter.updateTask(
+                        id: task.id,
+                        newTitle: updatedTitle,
+                        newDescription: updatedDescription,
+                        newIsCompleted: updatedIsCompleted
+                    )
                 }
             }
         }

@@ -23,30 +23,27 @@ class TaskListPresenter: TaskListPresenterProtocol,ObservableObject {
           self.interactor = interactor
       }
     func onAppear() {
-        // Create a DispatchGroup to wait for both tasks to complete
-        let dispatchGroup = DispatchGroup()
+        let hasLoadedInitialData = UserDefaults.standard.bool(forKey: "hasLoadedInitialData")
 
-        var fetchedNetworkTasks: [TaskEntity] = []
-        var fetchedCoreDataTasks: [TaskEntity] = []
-
-        // Fetch tasks from the network
-        dispatchGroup.enter()
-        interactor.fetchNetworkTasks { networkTasks in
-            fetchedNetworkTasks = networkTasks
-            dispatchGroup.leave()
-        }
-
-        // Fetch tasks from Core Data
-        dispatchGroup.enter()
-        interactor.fetchCoreDataTasks { coreDataTasks in
-            fetchedCoreDataTasks = coreDataTasks
-            dispatchGroup.leave()
-        }
-
-        // When both tasks are completed, update the presenter
-        dispatchGroup.notify(queue: .main) {
-            // Combine tasks from both sources
-            self.tasks = fetchedNetworkTasks + fetchedCoreDataTasks
+        if hasLoadedInitialData {
+            interactor.fetchCoreDataTasks { [weak self] coreDataTasks in
+                DispatchQueue.main.async {
+                    self?.tasks = coreDataTasks
+                }
+            }
+        } else {
+            interactor.fetchNetworkTasks { [weak self] networkTasks in
+                // сохраняем в CoreData
+                self?.interactor.saveTasksToCoreData(tasks: networkTasks) {
+                    // отмечаем, что данные были загружены
+                    UserDefaults.standard.set(true, forKey: "hasLoadedInitialData")
+                    self?.interactor.fetchCoreDataTasks { coreDataTasks in
+                        DispatchQueue.main.async {
+                            self?.tasks = coreDataTasks
+                        }
+                    }
+                }
+            }
         }
     }
     func addTask(title: String, taskDescription: String) {
