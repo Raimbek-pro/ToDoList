@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+
 protocol TaskListInteractorProtocol {
     func fetchCoreDataTasks(completion:@escaping ([TaskEntity])-> Void)
     func fetchNetworkTasks(completion:@escaping ([TaskEntity])-> Void)
@@ -17,9 +18,17 @@ protocol TaskListInteractorProtocol {
     
 }
 
+
 class TaskListInteractor: TaskListInteractorProtocol {
+    private let persistenceController: PersistenceController
+
+       init(persistenceController: PersistenceController = .shared) {
+           self.persistenceController = persistenceController
+       }
+
     func fetchCoreDataTasks(completion: @escaping ([TaskEntity]) -> Void) {
-        let context = PersistenceController.shared.container.viewContext
+        let context = persistenceController.container.viewContext
+       // let context = PersistenceController.shared.container.viewContext
         let fetchRequest = NSFetchRequest<Item>(entityName: "Item")
 
         do {
@@ -82,7 +91,8 @@ class TaskListInteractor: TaskListInteractorProtocol {
     
     func addTask(title: String, taskDescription: String, completion: @escaping () -> Void) {
         DispatchQueue.global().async {
-            let context = PersistenceController.shared.container.viewContext
+            let context = self.persistenceController.container.viewContext
+           // let context = PersistenceController.shared.container.viewContext
 
             let task = Item(context: context)
             task.id = Int64(Date().timeIntervalSince1970)
@@ -106,7 +116,8 @@ class TaskListInteractor: TaskListInteractorProtocol {
     
     func updateTask(id: Int64, newTitle: String, newDescription: String, newIsCompleted: Bool, completion: @escaping () -> Void) {
           DispatchQueue.global().async {
-              let context = PersistenceController.shared.container.viewContext
+              let context = self.persistenceController.container.viewContext
+              //let context = PersistenceController.shared.container.viewContext
               let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
               fetchRequest.predicate = NSPredicate(format: "id == %d", id)
 
@@ -133,7 +144,8 @@ class TaskListInteractor: TaskListInteractorProtocol {
      
       func deleteTask(id: Int64, completion: @escaping () -> Void) {
           DispatchQueue.global().async {
-              let context = PersistenceController.shared.container.viewContext
+              let context = self.persistenceController.container.viewContext
+             // let context = PersistenceController.shared.container.viewContext
               let fetchRequest: NSFetchRequest<Item> = Item.fetchRequest()
               fetchRequest.predicate = NSPredicate(format: "id == %d", id)
 
@@ -155,7 +167,8 @@ class TaskListInteractor: TaskListInteractorProtocol {
       }
     func saveTasksToCoreData(tasks: [TaskEntity], completion: @escaping () -> Void) {
         DispatchQueue.global().async {
-            let context = PersistenceController.shared.container.viewContext
+            let context = self.persistenceController.container.viewContext
+        //    let context = PersistenceController.shared.container.viewContext
             
             for task in tasks {
                 let newItem = Item(context: context)
