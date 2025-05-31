@@ -8,6 +8,9 @@ struct TaskEditView: View {
     @State private var description: String
     @State private var isCompleted: Bool
 
+    
+    @Environment(\.dismiss) private var dismiss
+    
     init(task: TaskEntity, onSave: @escaping (String, String, Bool) -> Void) {
         self.task = task
         self.onSave = onSave
@@ -17,24 +20,34 @@ struct TaskEditView: View {
     }
 
     var body: some View {
-        Form {
-            Section(header: Text("Title")) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
                 TextField("Title", text: $title)
-            }
-            Section(header: Text("Description")) {
-                TextField("Description", text: $description)
-            }
-            Section {
-                Toggle("Completed", isOn: $isCompleted)
+                    .font(.system(size: 28, weight: .bold))
+                    .padding(.horizontal)
+                    .padding(.top)
+
+                Divider()
+
+                TextEditor(text: $description)
+                    .font(.body)
+                    .padding(.horizontal)
+                    .frame(minHeight: 200) // Adjust height as needed
+
+
+                Spacer()
             }
         }
+        .background(Color(.systemBackground))
         .navigationTitle("Edit Task")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
                     onSave(title, description, isCompleted)
+                    dismiss()
                 }
+                .bold()
             }
         }
     }

@@ -5,33 +5,50 @@
 //  Created by Райымбек Омаров on 30.05.2025.
 //
 import SwiftUI
+
 struct AddTaskView: View {
-    @Environment(\.presentationMode) var presentationMode
+    @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var description = ""
-    
+
     var onSave: (_ title: String, _ description: String) -> Void
 
     var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Название")) {
-                    TextField("Введите заголовок", text: $title)
-                }
-                Section(header: Text("Описание")) {
-                    TextField("Введите описание", text: $description)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                TextField("Заголовок", text: $title)
+                    .font(.system(size: 28, weight: .bold))
+                    .padding(.horizontal)
+                    .padding(.top)
+
+                Divider()
+
+                TextEditor(text: $description)
+                    .font(.body)
+                    .padding(.horizontal)
+                    .frame(minHeight: 200)
+
+                Spacer()
+            }
+        }
+        .background(Color(.systemBackground))
+        .navigationTitle("Новая задача")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Отмена") {
+                    dismiss()
                 }
             }
-            .navigationBarTitle("Новая задача", displayMode: .inline)
-            .navigationBarItems(
-                leading: Button("Отмена") {
-                    presentationMode.wrappedValue.dismiss()
-                },
-                trailing: Button("Сохранить") {
+
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Сохранить") {
                     onSave(title, description)
-                    presentationMode.wrappedValue.dismiss()
-                }.disabled(title.isEmpty)
-            )
+                    dismiss()
+                }
+                .disabled(title.isEmpty)
+                .bold()
+            }
         }
     }
 }
