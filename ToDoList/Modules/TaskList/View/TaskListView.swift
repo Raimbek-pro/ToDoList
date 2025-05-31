@@ -4,13 +4,15 @@ struct TaskListView<T: TaskListPresenterProtocol>: View {
     @ObservedObject var presenter: T
     @State private var showingAddTask: Bool = false
     @State private var selectedTask: TaskEntity?
-
+    @State private var searchText: String = ""
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottomTrailing) {
                 ScrollView {
                     VStack(spacing: 0) {
-                        ForEach(presenter.tasks) { task in
+                        ForEach(presenter.tasks.filter {
+                            searchText.isEmpty || $0.title.localizedCaseInsensitiveContains(searchText)
+                        }) { task in
                             HStack(alignment: .top, spacing: 12) {
                                 Button(action: {
                                     presenter.updateTask(
@@ -23,7 +25,7 @@ struct TaskListView<T: TaskListPresenterProtocol>: View {
                                     Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
                                         .resizable()
                                         .frame(width: 24, height: 24)
-                                        .foregroundColor(task.isCompleted ? .green : .white)
+                                        .foregroundColor(task.isCompleted ? .yellow : .white)
                                 }
 
                                 VStack(alignment: .leading, spacing: 8) {
@@ -94,6 +96,7 @@ struct TaskListView<T: TaskListPresenterProtocol>: View {
                     }
                 }
             }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always))
             .navigationDestination(item: $selectedTask) { task in
                 TaskEditView(task: task) { updatedTitle, updatedDescription, updatedIsCompleted in
                     presenter.updateTask(
