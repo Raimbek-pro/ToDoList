@@ -1,9 +1,12 @@
-ToDOList app for Effective Mobile using CoreData ,GCD,API , Unit tests (Xctest)
-### 📝 Task List
-![Task List](images/screen1.png)
+# ✅ ToDoList App
 
-### Context menu
-![Menu](images/screen2.png)
+ToDoList app for Effective Mobile using **CoreData**, **GCD**, **API**, and **Unit tests (XCTest)**
+
+### 📝 Task List
+<img src="images/screen1.png" alt="Task List" width="400"/>
+
+### 📋 Context Menu
+<img src="images/screen2.png" alt="Context Menu" width="400"/>
 
 ### ✅ Edit
-![Edit](images/screen3.png)
+<img src="images/screen3.png" alt="Edit" width="400"/>
